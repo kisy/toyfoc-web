@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.svg">
+    <link rel="stylesheet" href="./lib/unocss-normalize.min.css">
+    <link rel="stylesheet" href="./style.css">
+    <script src="./lib/unocss-attributify.globa.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "d3-array": "https://esm.sh/d3-array@3",
+            "d3-color": "https://esm.sh/d3-color@3",
+            "d3-format": "https://esm.sh/d3-format@3",
+            "d3-interpolate": "https://esm.sh/d3-interpolate@3",
+            "d3-time": "https://esm.sh/d3-time@3",
+            "d3-time-format": "https://esm.sh/d3-time-format@4",
+            "d3-scale": "https://esm.sh/d3-scale@4",
+            "d3-selection": "https://esm.sh/d3-selection@3",
+            "d3-axis": "https://esm.sh/d3-axis@3"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="main" flex w="full">
+        <div id="left" w="75">
+            <div m="y3" x-data="EnableData">
+                <div m="y2 x1">Serial:</div>
+                <div text="sm" m="x2" flex>
+                    <label cursor="pointer" title="Velocity" mr="3">
+                        <input type="checkbox" x-model="enable_mqtt" > MQTT
+                    </label>
+                    <label cursor="pointer" title="Position" mr="3">
+                        <input type="checkbox" x-model="enable_serial" > Terminal
+                    </label>
+                    <label cursor="pointer" title="Position" mr="3">
+                        <input type="checkbox" x-model="fire_water" > FireWater
+                    </label>
+                    <label cursor="pointer" title="Position" mr="3">
+                        <input type="number" px="1" w="4em" x-model="sleep_ms" x-bind:="SleepMsInput"> SleepMs
+                    </label>
+                </div>
+            </div>
+            <div m="y3" x-data="LoopMode">
+                <div m="y2 x1">Loop mode:</div>
+                <div text="sm" m="x2" grid="~ 2 cols-3">
+                    <label cursor="pointer" title="Velocity" mt="1" mr="3">
+                        <input type="radio" value="5" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>Velocity</span>
+                    </label>
+                    <label cursor="pointer" title="Position" mt="1" mr="3">
+                        <input type="radio" value="6" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>Position</span>
+                    </label>
+                    <label cursor="pointer" title="Torque" mt="1" mr="3">
+                        <input type="radio" value="4" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>Torque</span>
+                    </label>
+                    
+                    <label cursor="pointer" title="PositionWithSensor" mt="1" mr="3">
+                        <input type="radio" value="1" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>AngleWS</span>
+                    </label>
+                    <label cursor="pointer" title="VelocityWithSensor" mt="1" mr="3">
+                        <input type="radio" value="2" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>VelocityWS</span>
+                    </label>
+                    <label cursor="pointer" title="PositionWithoutTorque" mt="1" mr="3">
+                        <input type="radio" value="3" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>AngleWOT</span>
+                    </label>
+                    <label cursor="pointer" title="OpenVelocity" mt="1" mr="3">
+                        <input type="radio" value="0" x-model="mode" x-bind="LoopModeInput"> 
+                        <span>OpenVelocity</span>
+                    </label>
+                </div>
+            </div>
+
+            <div m="y3">
+                <div m="y2 x1">Power & Limit:</div>
+                <div m="x2" text="sm" x-data="DataLimit">
+                    <label flex items-center mt="2">
+                        <span w="12em">VoltagePower</span>
+                        <input type="text" name="p" w="full" p="1" x-model="voltage_power" x-bind="InputVoltagePower">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="12em">VoltageLimit</span>
+                        <input type="text" name="i" w="full" p="1" x-model="voltage_limit" x-bind="InputVoltageLimit">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="12em">TorqueLimit</span>
+                        <input type="text" name="d" w="full" p="1" x-model="torque_limit" x-bind="InputTorqueLimit">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="12em">VelocityLimit</span>
+                        <input type="text" name="d" w="full" p="1" x-model="velocity_limit" x-bind="InputVelocityLimit">
+                    </label>
+                </div>
+            </div>
+
+            <div m="y3" x-data="DebugPIDData">
+                <div m="y2 x1">PID:</div>
+                <div text="sm" m="x2" flex>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="velocity" x-model="which_pid"> Velocity
+                    </label>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="position" x-model="which_pid"> Position
+                    </label>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="torque" x-model="which_pid"> Torque
+                    </label>
+                </div>
+                <div m="x2" text="sm">
+                    <label flex items-center mt="2">
+                        <span w="2em">p</span>
+                        <input type="text" name="p" w="full" p="1" x-model="pid.p" x-bind="DebugInputP">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="2em">i</span>
+                        <input type="text" name="i" w="full" p="1" x-model="pid.i" x-bind="DebugInputI">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="2em">d</span>
+                        <input type="text" name="d" w="full" p="1" x-model="pid.d" x-bind="DebugInputD">
+                    </label>
+                </div>
+            </div>
+
+            <div m="y3" x-data="DebugLoopData">
+                <div m="y2 x1">Loop:</div>
+                <div text="sm" m="x2" flex>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="velocity" x-model="which_loop"> Velocity
+                    </label>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="position" x-model="which_loop"> Position
+                    </label>
+                    <label cursor="pointer" mr="2">
+                        <input type="radio" value="torque" x-model="which_loop"> Torque
+                    </label>
+                </div>
+                <div m="x2" text="sm">
+                    <label flex items-center mt="2">
+                        <span w="5em">Ramp</span>
+                        <input type="text" w="full" p="1" x-model="loop.ramp" x-bind="DebugInputRamp">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="5em">Limit</span>
+                        <input type="text" disabled w="full" p="1" x-model="loop.limit" x-bind="DebugInputLimit">
+                    </label>
+                    <label flex items-center mt="2">
+                        <span w="5em">TF</span>
+                        <input type="text" w="full" p="1" x-model="loop.tf" x-bind="DebugInputTF">
+                    </label>
+                </div>
+            </div>
+            <div mt="5" x-data="TargetData">
+                <label flex items-center>
+                    <span w="8em">Target</span>
+                    <input type="text" w="full" mr="4" p="2" x-model="target" x-bind="InputChange">
+                </label>
+            </div>
+        </div>
+        <div id="right" w="full">
+            <!-- <div x-data="AlpineChart" w="full" h="full" >
+                <div class="content" w="full" h="full" x-ref="statesChart" id="statesChart"></div>
+                <div>
+                    <button cursor="pointer" ml="4" p="1" x-bind="EnableRealTime">Enable</button>
+                </div>
+            </div> -->
+            
+        </div>
+    </div>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
